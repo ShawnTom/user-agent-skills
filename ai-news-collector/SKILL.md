@@ -1,7 +1,8 @@
 ---
 name: ai-news-collector
-version: 2.6.0
-description: AI 行业资讯周报生成。覆盖国内外大模型公司动态（头部公司 ≥ 3 条，每条多 query + 多源 + 完整 highlights）、制造业+AI 行业（头部 3 家 + 方法论/案例/政策各 7 条）、AI 新应用范式（waytoagi 主题聚类，每范式 5-10 支撑条目），每周以 overwrite 方式更新到唯一知识库。
+version: 2.6.1
+description: AI 行业资讯周报生成。覆盖国内外大模型公司动态（头部公司 ≥ 3 条，每条多 query + 多源 + 完整 highlights）、制造业+AI 行业（头部 3 家 + 方法论/案例/政策各 7 条）、AI 新应用范式（waytoagi 主题聚类，每范式 5-10 支撑条目），每周以 overwrite 方式更新到唯一知识库（带写入后三重自检 + 3 次重试）。
+tags: [ai, news, weekly-report, feishu, manufacturing]
 tags: [ai, news, weekly-report, feishu, manufacturing]
 triggers:
   - "跑一下 ai-news-collector"
@@ -625,6 +626,102 @@ lark-cli docs +update \
 - 必须用相对路径（`@./file.md`）
 - 必须在文件所在目录跑（`cd /Users/st/Documents/ai-weekly-reports`）
 
+### ⚠️ 写入后必须自检（v2.6.1 新增，吸取 v6 实战教训）
+
+**问题背景**：v2.6.0 实跑时，lark-cli 返回 `"result": "success", "revision_id": 184`，但实际写入**未生效**——再次 fetch 发现内容还是旧版，revision 已跳到 186。**仅靠返回值不可信**。
+
+#### 自检命令（写入后**必跑**）
+
+```bash
+# 1. 读飞书实际内容字节数
+ACTUAL_SIZE=$(lark-cli docs +fetch --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+  --doc-format markdown --jq '.data.document.content' 2>/dev/null | wc -c)
+
+# 2. 对比本地文件字节数
+LOCAL_SIZE=$(wc -c < ./2026-07-03-MiniMax-M3.md)
+
+# 3. 验证
+if [ "$ACTUAL_SIZE" -ge "$((LOCAL_SIZE * 9 / 10))" ]; then
+  echo "✅ 写入成功 (实际=$ACTUAL_SIZE / 本地=$LOCAL_SIZE)"
+else
+  echo "❌ 写入异常 (实际=$ACTUAL_SIZE / 本地=$LOCAL_SIZE)"
+  echo "建议重试 overwrite，或人工检查"
+  exit 1
+fi
+
+# 4. 验证标题确实是新版（不应是"基模-Qwen3.7Max"）
+TITLE=$(lark-cli docs +fetch --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+  --doc-format markdown --jq '.data.document.content' 2>/dev/null | head -3)
+if echo "$TITLE" | grep -q "2026/07/03"; then
+  echo "✅ 标题确认是新版"
+else
+  echo "⚠️ 飞书 docx 内容开头是旧版，overwrite 可能未生效"
+fi
+```
+
+#### 三重验证逻辑
+
+| 验证项 | 失败含义 | 处理 |
+| --- | --- | --- |
+| **字节数差异**（实际 ≥ 本地 90%） | overwrite 没生效 | 重试 overwrite |
+| **内容首行**（应是新日期） | 写入失败或写入错对象 | 立刻重试 + 人工介入 |
+| **revision_id**（应单调递增） | 写入被静默拒绝 | 立即重试（最多 3 次） |
+
+#### 自动重试策略
+
+```bash
+# 完整写入 + 自检 + 重试循环（最多 3 次）
+for i in 1 2 3; do
+  lark-cli docs +update --command overwrite \
+    --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+    --doc-format markdown \
+    --content @./2026-07-03-MiniMax-M3.md
+
+  sleep 2  # 给飞书 API 同步时间
+
+  # 自检
+  if [ 自检通过 ]; then
+    echo "✅ 第 $i 次写入成功"
+    break
+  else
+    echo "⚠️ 第 $i 次写入失败，2 秒后重试"
+    sleep 2
+  fi
+done
+```
+
+#### ⚠️ 用户应做（一次性，飞书网页）
+
+为避免标题歧义，请在 https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh 网页端**手动修改 wiki 节点标题**：
+
+- 当前标题：`2026/06/18-Qwen3.7Max`（历史残留，**令人困惑**）
+- 建议改为：`AI 行业周报`
+
+> 文档**内部** H1 是 `# AI 行业周报 · yyyy/mm/dd`（每周自动更新），但 wiki 节点标题是 wiki 容器本身的名字，lark-cli 不能修改。
+
+### 🛡️ 安全锁定（v2.6.1 新增）
+
+为防止误操作，**首次**配置时建议手动验证：
+
+```bash
+# 1. 确认 obj_token 是你想要的（不是别的文档）
+lark-cli drive +inspect --url "https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh"
+
+# 期望看到：
+#   node_token: Czj0w4LIHiJNsykRhhWcYvvQnVh
+#   obj_token:  RlHHdgzOsoYVc5xuzSdcWa8Pn5f  ← 锁定这个
+#   title:      <你的目标标题>
+
+# 2. 跑一次 dry-run overwrite（不会真改）
+lark-cli docs +update --command overwrite \
+  --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+  --doc-format markdown \
+  --content @./2026-07-03-MiniMax-M3.md \
+  --dry-run
+
+# 3. 看 API 请求的 URL 是否指向正确 obj_token
+```
+
 ### 自查（末尾必含）
 
 ```
@@ -768,6 +865,7 @@ lark-cli skills read lark-doc
 
 | 版本 | 日期 | 主要变更 |
 | --- | --- | --- |
+| 2.6.1 | 2026-07-03 | **飞书写入自检机制**：吸取 v6 实战 bug（"success" 返回值不能信），加入三重验证（字节数 / 内容首行 / revision 递增）+ 3 次自动重试 + obj_token 锁定步骤 |
 | 2.6.0 | 2026-07-03 | **流程重写**：多 query（5-8/家）、读完整 highlights、每条 2-3 来源、信息源标签【官方/媒体】、Part 2 扩到 3 头条+7 方法论+7 政策、waytoagi 主题聚类 7+ 主题、必加 ⚠️ 待核实、新门禁 G7/G8/G9 |
 | 2.5.1 | 2026-07-03 | **标题层级规则**：头部公司（≥3 条）合并为 H3 段 + 编号 H4 子条目（① ② ③）；常规公司 1 条 H4；无更新用 ⚠️ 降噪 |
 | 2.5.0 | 2026-07-03 | **唯一目标知识库**（`Czj0w4...QnVh`）；默认 overwrite 模式；删除"复制到新空间"流程；保留本地 Markdown 备份防历史丢失 |
