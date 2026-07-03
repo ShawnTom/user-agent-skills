@@ -24,6 +24,30 @@
 
 ## [ai-news-collector] - 当前版本
 
+### [2.1.0] - 2026-07-03
+
+#### Added
+- 附录 F「前置依赖安装」：完整列出 agent-reach / Exa / lark-cli / yt-dlp / gh 等依赖
+- 附录 F.5「一键安装脚本」：从零装齐所有依赖
+- 附录 F.6「故障排查」：常见错误 + 修法（PEP 668 / Jina search 失败 / 飞书抓空等）
+- F.2 venv 隔离安装指南（因 Homebrew Python 启用 PEP 668）
+- F.3 Exa 语义搜索配置（替代不可用的 Jina search）
+
+#### Changed
+- 附录 C「lark-cli 备查」：修正为真实语法 `lark-cli docs +create --content @file.md --doc-format markdown --parent-token <token>`
+- 移除附录 C 里的旧语法 `lark-cli docs create --folder`（已过时）
+
+#### Effect
+- 文件行数：429 → 575（+34%）
+- 字节数：14713 → 约 20KB（+35%）
+- 首次跑前必须装齐：agent-reach + mcporter + Exa + lark-cli（详见附录 F）
+- 预计首次运行成功率：**待 v2.1 首次跑后回填**
+
+#### Migration
+- 兼容 v2.0.0：仅新增附录，章节顺序无变化
+
+---
+
 ### [2.0.0] - 2026-07-03
 
 #### Changed

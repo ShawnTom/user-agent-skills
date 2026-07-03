@@ -1,6 +1,6 @@
 ---
 name: ai-news-collector
-version: 2.0.0
+version: 2.1.0
 description: AI 行业资讯周报生成。覆盖国内外大模型公司动态、制造业+AI 行业、AI 新应用范式，输出为飞书文档。
 tags: [ai, news, weekly-report, feishu, manufacturing]
 triggers:
@@ -409,10 +409,21 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 ### C. lark-cli 备查
 
 ```bash
-# 实际命令以 lark-cli --help 为准
-lark-cli --help
+# 查看版本
+lark-cli --version
+
+# 查看 docs 子命令
 lark-cli docs --help
-lark-cli docs create --title "2026/07/03-MiniMax-M3" --folder <folder_id>
+
+# 创建文档（实际语法，lark-cli ≥ 1.0）
+lark-cli docs +create \
+  --title "2026/07/03-MiniMax-M3" \
+  --content @content.md \
+  --doc-format markdown \
+  --parent-token <wiki_node_token>
+
+# 完整工作流指南（lark-cli 内置 skill）
+lark-cli skills read lark-doc
 ```
 
 ### D. 本地备份目录
@@ -428,6 +439,7 @@ lark-cli docs create --title "2026/07/03-MiniMax-M3" --folder <folder_id>
 
 | 版本 | 日期 | 主要变更 |
 | --- | --- | --- |
+| 2.1.0 | 2026-07-03 | 补"前置依赖安装"附录（agent-reach / Exa / lark-cli） |
 | 2.0.0 | 2026-07-03 | 重构：补 frontmatter / 数据源分层 / 输出模板 / 质量门禁 / 失败恢复 / 样例 / 附录 |
 | 1.0.0 | 2026-07-03 | 初版 |
 
@@ -435,3 +447,99 @@ lark-cli docs create --title "2026/07/03-MiniMax-M3" --folder <folder_id>
 1. 更新 `SKILL.md` 的 `version` 字段
 2. 在 `../../CHANGELOG.md` 追加新版本段
 3. Git 提交（建议打 tag）
+
+### F. 前置依赖安装（首次跑前必读）
+
+> 本 skill 依赖若干**用户级**工具。所有工具均装到用户目录，**不需 sudo**、**不修改系统文件**。
+
+#### F.1 完整依赖清单
+
+| 工具 | 必需 | 用途 | 装在哪里 | 安装命令 |
+| --- | --- | --- | --- | --- |
+| **Python 3** | ✅ | 跑 agent-reach | Homebrew | （系统已有） |
+| **Node.js** | ✅ | 跑 mcporter | `~/.local/bin/node` | （系统已有） |
+| **agent-reach** | ✅ | 调度所有网络工具 | venv: `~/.agent-reach/venv/` | 见 F.2 |
+| **mcporter + Exa MCP** | ✅ | 全网语义搜索（替代 Jina search） | npm 全局: `~/.local/bin/mcporter` | 见 F.3 |
+| **lark-cli** | ✅（写飞书） | 写飞书文档 | `~/.local/bin/lark-cli` | 见 F.4 |
+| **yt-dlp** | ⚠️ 可选 | 视频字幕/元数据 | venv: `~/.agent-reach/venv/bin/yt-dlp` | `~/.agent-reach/venv/bin/pip install yt-dlp` |
+| **gh CLI** | ⚠️ 可选 | GitHub 仓库信息 | Homebrew | `brew install gh` |
+| **gh auth** | ⚠️ GitHub 才要 | 认证 gh | — | `gh auth login`（**需用户交互**） |
+
+#### F.2 安装 agent-reach（核心）
+
+> **必须用 venv 隔离**，因 Homebrew Python 启用 PEP 668 禁止系统级 pip install。
+
+```bash
+# 1. 创建 venv
+python3 -m venv ~/.agent-reach/venv
+
+# 2. 在 venv 里装 agent-reach
+~/.agent-reach/venv/bin/pip install https://github.com/Panniantong/agent-reach/archive/main.zip
+
+# 3. 验证
+~/.agent-reach/venv/bin/agent-reach --version
+# 应输出：Agent Reach v1.5.0
+
+# 4. 检查渠道状态
+~/.agent-reach/venv/bin/agent-reach doctor
+# 关注：Exa / Jina / RSS / GitHub 状态
+```
+
+#### F.3 安装 Exa 语义搜索（必需）
+
+```bash
+# 1. 装 mcporter（npm 全局）
+npm install -g mcporter
+
+# 2. 注册 Exa MCP（免费，无需 API Key）
+mcporter config add exa https://mcp.exa.ai/mcp
+
+# 3. 验证
+mcporter call exa.web_search_exa query="test" numResults=2
+```
+
+#### F.4 验证 lark-cli（写飞书）
+
+```bash
+# 版本检查
+lark-cli --version
+# 应输出 ≥ 1.0.x
+
+# 飞书文档命令帮助
+lark-cli docs +create --help
+```
+
+> lark-cli 真实写飞书的语法是 **`lark-cli docs +create --title "..." --content @file.md --doc-format markdown --parent-token <wiki_token>`**，**不是**之前文档里写的 `lark-cli docs create --folder`（那个语法已过时）。
+
+#### F.5 完整安装脚本（一键）
+
+```bash
+#!/bin/bash
+set -e
+echo "==> 1/4 装 agent-reach (venv)"
+python3 -m venv ~/.agent-reach/venv
+~/.agent-reach/venv/bin/pip install --quiet https://github.com/Panniantong/agent-reach/archive/main.zip
+
+echo "==> 2/4 装 yt-dlp"
+~/.agent-reach/venv/bin/pip install --quiet yt-dlp
+
+echo "==> 3/4 装 mcporter (npm 全局)"
+npm install -g mcporter
+mcporter config add exa https://mcp.exa.ai/mcp
+
+echo "==> 4/4 验证"
+~/.agent-reach/venv/bin/agent-reach --version
+mcporter call exa.web_search_exa query="ping" numResults=1
+
+echo "✅ 全部依赖装好"
+```
+
+#### F.6 故障排查
+
+| 症状 | 原因 | 修法 |
+| --- | --- | --- |
+| `pip: command not found` | Homebrew Python 路径 | 用 `python3 -m pip` |
+| `PEP 668 externally-managed-environment` | Homebrew 锁了系统 Python | **必须用 venv**（F.2） |
+| `all providers returned errors`（Jina search） | Jina search 不可用 | 改用 Exa（`mcporter call exa.web_search_exa ...`） |
+| `waytoagi` 飞书文档抓空 | 需要登录态 | 跳过 Part 3 或改用 RSS 备选源 |
+| `lark-cli docs +create` 报"无权限" | 没登录飞书 / token 失效 | 跑 `lark-cli login`（需用户） |
