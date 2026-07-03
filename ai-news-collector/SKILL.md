@@ -1,8 +1,7 @@
 ---
 name: ai-news-collector
-version: 2.6.1
-description: AI 行业资讯周报生成。覆盖国内外大模型公司动态（头部公司 ≥ 3 条，每条多 query + 多源 + 完整 highlights）、制造业+AI 行业（头部 3 家 + 方法论/案例/政策各 7 条）、AI 新应用范式（waytoagi 主题聚类，每范式 5-10 支撑条目），每周以 overwrite 方式更新到唯一知识库（带写入后三重自检 + 3 次重试）。
-tags: [ai, news, weekly-report, feishu, manufacturing]
+version: 2.7.0
+description: AI 行业资讯周报生成。覆盖国内外大模型公司动态（头部公司 ≥ 3 条，每条多 query + 多源 + 完整 highlights）、制造业+AI 行业（头部 3 家 + 方法论/案例/政策各 7 条）、AI 新应用范式（waytoagi 主题聚类，每范式 5-10 支撑条目）。**每周新建独立文档**，绝不覆盖任何已有文档。
 tags: [ai, news, weekly-report, feishu, manufacturing]
 triggers:
   - "跑一下 ai-news-collector"
@@ -547,7 +546,7 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
               ┌───────┴────────┐
               ▼                ▼
         ┌──────────┐    ┌──────────────────────────┐
-        │ dry-run  │    │ overwrite 唯一目标 wiki     │
+        │ dry-run  │    │ create 新文档到目标 wiki   │
         └──────────┘    └──────────────────────────┘
 ```
 
@@ -603,123 +602,87 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 
 每个主题配 **5-10 个支撑条目**（带原文链接）。
 
-### 飞书写入（默认 mode：overwrite 唯一目标 wiki）
+### 飞书写入（v2.7.0 起：每次新建独立文档，不覆盖任何已有文档）
 
-**v2.5.0 起**固定为 overwrite 模式。目标：
+> **核心原则**：用户明确要求 **绝不允许覆盖任何已有的飞书文档**。每周的周报都是新文档。
+
+#### 目标知识库（用户指定）
 
 ```
-node_token:  Czj0w4LIHiJNsykRhhWcYvvQnVh
-obj_token:   RlHHdgzOsoYVc5xuzSdcWa8Pn5f   ← overwrite 用
-url:         https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh
+node_token:  LCFAwX7NmiepiIkU52AcoYUAnoh
+url:         https://my.feishu.cn/wiki/LCFAwX7NmiepiIkU52AcoYUAnoh
+space_id:    7651908426297002965
 ```
+
+> 用户在 2026/07/03 验证：self-check 文档创建成功 ✅。说明该 wiki 允许 API 创建子文档。
+
+#### 命令（**默认 create**，绝不 update/overwrite）
 
 ```bash
-lark-cli docs +update \
-  --command overwrite \
-  --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+cd /Users/st/Documents/ai-weekly-reports
+lark-cli docs +create \
+  --as user \
+  --title "2026/07/03-MiniMax-M3" \
   --doc-format markdown \
-  --content @./2026-07-03-MiniMax-M3.md
+  --content @./2026-07-03-MiniMax-M3.md \
+  --parent-token "LCFAwX7NmiepiIkU52AcoYUAnoh"
 ```
 
 **注意**：
-- 用 obj_token（`RlHH...Pn5f`），不是 node_token
-- 必须用相对路径（`@./file.md`）
-- 必须在文件所在目录跑（`cd /Users/st/Documents/ai-weekly-reports`）
+- 必须用 `--as user`（user 身份才有 docx:document:create scope）
+- 必须用相对路径（`@./file.md`），lark-cli 不接受绝对路径
+- 必须 `cd` 到文件目录
+- **绝对不要**用 `docs +update overwrite` —— 那是 v2.5.0~v2.6.1 的错误设计
 
-### ⚠️ 写入后必须自检（v2.6.1 新增，吸取 v6 实战教训）
-
-**问题背景**：v2.6.0 实跑时，lark-cli 返回 `"result": "success", "revision_id": 184`，但实际写入**未生效**——再次 fetch 发现内容还是旧版，revision 已跳到 186。**仅靠返回值不可信**。
-
-#### 自检命令（写入后**必跑**）
+#### ⚠️ 验证：创建后必须 fetch 确认内容完整（v2.7.0 强化）
 
 ```bash
-# 1. 读飞书实际内容字节数
-ACTUAL_SIZE=$(lark-cli docs +fetch --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+# 1. 拿创建返回的 document_id
+DOC_ID="<从 lark-cli docs +create 输出里取>"
+
+# 2. fetch 验证内容完整
+ACTUAL_SIZE=$(lark-cli docs +fetch --doc "$DOC_ID" \
   --doc-format markdown --jq '.data.document.content' 2>/dev/null | wc -c)
 
-# 2. 对比本地文件字节数
 LOCAL_SIZE=$(wc -c < ./2026-07-03-MiniMax-M3.md)
 
-# 3. 验证
+# 3. 对比
 if [ "$ACTUAL_SIZE" -ge "$((LOCAL_SIZE * 9 / 10))" ]; then
-  echo "✅ 写入成功 (实际=$ACTUAL_SIZE / 本地=$LOCAL_SIZE)"
+  echo "✅ 创建成功且内容完整 (实际=$ACTUAL_SIZE / 本地=$LOCAL_SIZE)"
+  echo "📄 飞书 URL: https://my.feishu.cn/docx/$DOC_ID"
 else
-  echo "❌ 写入异常 (实际=$ACTUAL_SIZE / 本地=$LOCAL_SIZE)"
-  echo "建议重试 overwrite，或人工检查"
+  echo "❌ 内容异常 (实际=$ACTUAL_SIZE / 本地=$LOCAL_SIZE)"
   exit 1
 fi
-
-# 4. 验证标题确实是新版（不应是"基模-Qwen3.7Max"）
-TITLE=$(lark-cli docs +fetch --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
-  --doc-format markdown --jq '.data.document.content' 2>/dev/null | head -3)
-if echo "$TITLE" | grep -q "2026/07/03"; then
-  echo "✅ 标题确认是新版"
-else
-  echo "⚠️ 飞书 docx 内容开头是旧版，overwrite 可能未生效"
-fi
 ```
 
-#### 三重验证逻辑
+#### 三不原则
 
-| 验证项 | 失败含义 | 处理 |
-| --- | --- | --- |
-| **字节数差异**（实际 ≥ 本地 90%） | overwrite 没生效 | 重试 overwrite |
-| **内容首行**（应是新日期） | 写入失败或写入错对象 | 立刻重试 + 人工介入 |
-| **revision_id**（应单调递增） | 写入被静默拒绝 | 立即重试（最多 3 次） |
+| 不做什么 | 为什么 |
+| --- | --- |
+| ❌ 不覆盖任何已有文档 | 用户明确禁止 |
+| ❌ 不重复创建同标题文档 | 先用 `drive +search` 检查标题是否已存在 |
+| ❌ 不信任 lark-cli 的"success" 返回 | v2.6.0 实战教训：曾返回 success 但实际未写入 |
 
-#### 自动重试策略
+#### ⚠️ 飞书 API 限制（实测）
 
-```bash
-# 完整写入 + 自检 + 重试循环（最多 3 次）
-for i in 1 2 3; do
-  lark-cli docs +update --command overwrite \
-    --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
-    --doc-format markdown \
-    --content @./2026-07-03-MiniMax-M3.md
+- **必须用 user 身份**：企业账号没有 docx:document:create scope
+- **某些 wiki 节点禁止 API 创建子文档**（如 `KRltwXjqQi7GtbkSneQcVAj6nj6`，错误码 3380004）—— 这些只能手动建
+- **每周创建后**：用户可在飞书网页端手动"移动到知识库"—— 但默认新建在 LCFAwX7... 这个 wiki 下
 
-  sleep 2  # 给飞书 API 同步时间
-
-  # 自检
-  if [ 自检通过 ]; then
-    echo "✅ 第 $i 次写入成功"
-    break
-  else
-    echo "⚠️ 第 $i 次写入失败，2 秒后重试"
-    sleep 2
-  fi
-done
-```
-
-#### ⚠️ 用户应做（一次性，飞书网页）
-
-为避免标题歧义，请在 https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh 网页端**手动修改 wiki 节点标题**：
-
-- 当前标题：`2026/06/18-Qwen3.7Max`（历史残留，**令人困惑**）
-- 建议改为：`AI 行业周报`
-
-> 文档**内部** H1 是 `# AI 行业周报 · yyyy/mm/dd`（每周自动更新），但 wiki 节点标题是 wiki 容器本身的名字，lark-cli 不能修改。
-
-### 🛡️ 安全锁定（v2.6.1 新增）
-
-为防止误操作，**首次**配置时建议手动验证：
+### 🛡️ 创建前自检
 
 ```bash
-# 1. 确认 obj_token 是你想要的（不是别的文档）
-lark-cli drive +inspect --url "https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh"
+# 1. 确认目标 wiki 仍是预期的（确认能创建）
+lark-cli drive +inspect --url "https://my.feishu.cn/wiki/LCFAwX7NmiepiIkU52AcoYUAnoh"
 
 # 期望看到：
-#   node_token: Czj0w4LIHiJNsykRhhWcYvvQnVh
-#   obj_token:  RlHHdgzOsoYVc5xuzSdcWa8Pn5f  ← 锁定这个
-#   title:      <你的目标标题>
+#   node_token: LCFAwX7NmiepiIkU52AcoYUAnoh
+#   title:      <当前 wiki 标题，可能是历史残留>
 
-# 2. 跑一次 dry-run overwrite（不会真改）
-lark-cli docs +update --command overwrite \
-  --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
-  --doc-format markdown \
-  --content @./2026-07-03-MiniMax-M3.md \
-  --dry-run
-
-# 3. 看 API 请求的 URL 是否指向正确 obj_token
+# 2. 检查本周是否已创建过（防重复）
+lark-cli drive +search --space-ids 7651908426297002965 \
+  --query "2026/07/03" --page-size 5 2>&1 | grep -i "2026/07/03"
 ```
 
 ### 自查（末尾必含）
@@ -814,10 +777,10 @@ lark-cli docs +update --command overwrite \
 | --- | --- |
 | waytoagi（每日知识库更新 wiki） | https://waytoagi.feishu.cn/wiki/XjxvwwCZ7ijJMxkJ3SucrVEUn4p |
 | waytoagi（旧框架入口） | https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e |
-| **飞书输出（**唯一目标 wiki**）** | https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh |
-| 目标 wiki node_token | `Czj0w4LIHiJNsykRhhWcYvvQnVh` |
-| 目标 docx obj_token（overwrite 用） | `RlHHdgzOsoYVc5xuzSdcWa8Pn5f` |
+| **飞书输出目标 wiki** | https://my.feishu.cn/wiki/LCFAwX7NmiepiIkU52AcoYUAnoh |
+| 目标 wiki node_token | `LCFAwX7NmiepiIkU52AcoYUAnoh` |
 | 目标 space_id | `7651908426297002965` |
+| （**不覆盖任何已有文档**） | 每周新建独立文档 |
 | arXiv cs.AI | https://arxiv.org/list/cs.AI/recent |
 | arXiv cs.CL | https://arxiv.org/list/cs.CL/recent |
 | OpenAI 博客 | https://openai.com/blog |
@@ -830,7 +793,7 @@ lark-cli docs +update --command overwrite \
 
 ### C. lark-cli 备查
 
-> v2.5.0 起，**默认使用 update overwrite**，不再创建新文档。
+> **v2.7.0 起**：**默认创建新文档**，绝不 update/overwrite。
 
 ```bash
 # 查看版本
@@ -839,12 +802,13 @@ lark-cli --version
 # 查看 docs 子命令
 lark-cli docs --help
 
-# ★ 默认操作：overwrite 唯一目标 wiki 里的 docx
-lark-cli docs +update \
-  --command overwrite \
-  --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+# ★ 默认操作：在目标 wiki 下创建新文档
+lark-cli docs +create \
+  --as user \
+  --title "2026/07/03-MiniMax-M3" \
   --doc-format markdown \
-  --content @./2026-07-03-MiniMax-M3.md
+  --content @./2026-07-03-MiniMax-M3.md \
+  --parent-token "LCFAwX7NmiepiIkU52AcoYUAnoh"
 
 # 完整工作流指南（lark-cli 内置 skill）
 lark-cli skills read lark-doc
@@ -856,7 +820,7 @@ lark-cli skills read lark-doc
 ~/Documents/ai-weekly-reports/YYYY-MM-DD-模型版本.md
 ```
 
-> **重要**：因飞书上 overwrite 会丢失历史，建议永远在本地保留 Markdown 备份（至少最近 4 周可对比）。
+> **重要**：v2.7.0 起，**每周飞书端是一份独立文档**，但**本地仍建议保留 Markdown 备份**，方便后续 diff 对比 / 跨周引用。
 
 ### E. 版本历史
 
@@ -865,10 +829,11 @@ lark-cli skills read lark-doc
 
 | 版本 | 日期 | 主要变更 |
 | --- | --- | --- |
+| 2.7.0 | 2026-07-03 | **推翻 overwrite 模式**：每次周报新建独立文档（绝不允许覆盖任何已有文档）。目标 wiki 改用 `LCFAwX7NmiepiIkU52AcoYUAnoh`。删除全部 v2.5.0~v2.6.1 的 overwrite 残留。 |
 | 2.6.1 | 2026-07-03 | **飞书写入自检机制**：吸取 v6 实战 bug（"success" 返回值不能信），加入三重验证（字节数 / 内容首行 / revision 递增）+ 3 次自动重试 + obj_token 锁定步骤 |
 | 2.6.0 | 2026-07-03 | **流程重写**：多 query（5-8/家）、读完整 highlights、每条 2-3 来源、信息源标签【官方/媒体】、Part 2 扩到 3 头条+7 方法论+7 政策、waytoagi 主题聚类 7+ 主题、必加 ⚠️ 待核实、新门禁 G7/G8/G9 |
 | 2.5.1 | 2026-07-03 | **标题层级规则**：头部公司（≥3 条）合并为 H3 段 + 编号 H4 子条目（① ② ③）；常规公司 1 条 H4；无更新用 ⚠️ 降噪 |
-| 2.5.0 | 2026-07-03 | **唯一目标知识库**（`Czj0w4...QnVh`）；默认 overwrite 模式；删除"复制到新空间"流程；保留本地 Markdown 备份防历史丢失 |
+| 2.5.0 | 2026-07-03 | **唯一目标知识库**（`Czj0w4...QnVh`）；默认 overwrite 模式；删除"复制到新空间"流程；保留本地 Markdown 备份防历史丢失 ⚠️ 此模式被 v2.7.0 推翻 |
 | 2.4.1 | 2026-07-03 | 头部公司（字节/阿里/智谱/MiniMax）≥ 3 条规则；G1.1 门禁 + 补抓流程；3 条内容维度模板 |
 | 2.4.0 | 2026-07-03 | 补 3 大规则：① 必抓官方源清单（每家公司）② 行业大会追踪维度（FORCE 等）③ Part 3 精选评分标准（Top 5，含创新/操作/时效/传播 4 维） |
 | 2.3.0 | 2026-07-03 | waytoagi 链接更新为 Xjxv...Un4p（每日更新 wiki）；新增 docs +update overwrite 用于更新旧周报 |

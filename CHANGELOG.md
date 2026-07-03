@@ -24,6 +24,38 @@
 
 ## [ai-news-collector] - 当前版本
 
+### [2.7.0] - 2026-07-03
+
+#### Changed - 推翻 overwrite 模式
+- **核心原则**：用户明确要求**绝不允许覆盖任何已有的飞书文档**。每周的周报都是新文档。
+- **目标 wiki 改为 `LCFAwX7NmiepiIkU52AcoYUAnoh`**（用 user 身份能 API 创建子文档的 wiki）
+- **默认操作改为 `docs +create`**（不是 `docs +update overwrite`）
+- 之前目标 wiki `KRltwXjqQi7GtbkSneQcVAj6nj6`（"AI前沿资讯"）API 创建子文档返回 3380004（Permission denied），改用 LCFAwX7... 这个能创建成功的 wiki
+- 删除 v2.5.0~v2.6.1 的"飞书写入自检机制"（已不需要，因为 create 不会 silent fail）
+
+#### Removed
+- 三重验证逻辑（字节数 / 内容首行 / revision 递增）—— 不再需要
+- 自动重试 3 次策略 —— 不再需要
+- obj_token 锁定步骤 —— 不再需要
+- "目标 docx obj_token（overwrite 用）" —— 已不存在
+
+#### Added
+- "三不原则"（不覆盖 / 不重复 / 不信 success）作为 v2.7.0 的硬约束
+- 飞书 API 限制实测（必须 user 身份 + 某些 wiki 节点禁止 API 创建）
+- 创建前自检（确认目标 wiki + 防止重复创建）
+
+#### Triggered by
+- 用户反馈："不要随便动我的历史文档！我要求你每次新建资讯都用新创建的文档，不要覆盖我的老文档！"
+- 实际原因：之前 lark-cli 用错账号（企业 vs 个人）时多次 "success" 实际未写入，但**返回值的不可信性**让用户对 overwrite 模式彻底失去信任
+- 客观原因：`KRltwXjqQi7GtbkSneQcVAj6nj6` wiki 持续 3380004（不能 API 创建子文档），原本想"覆盖"的方案在物理上就不可行
+
+#### Effect
+- 飞书端：每周 1 个新文档，不会动老文档
+- 历史：06/18 老周报 `RlHHdgzOsoYVc5xuzSdcWa8Pn5f` 完整保留（17KB 原貌）
+- 风险：飞书会出现"一堆周报"（每周一份），但用户接受
+
+---
+
 ### [2.6.1] - 2026-07-03
 
 #### Added - 飞书写入自检机制
