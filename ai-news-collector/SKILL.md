@@ -1,7 +1,7 @@
 ---
 name: ai-news-collector
-version: 2.4.1
-description: AI 行业资讯周报生成。覆盖国内外大模型公司动态（头部公司 ≥ 3 条）、制造业+AI 行业、AI 新应用范式（Top 5 精选），输出为飞书文档。
+version: 2.5.0
+description: AI 行业资讯周报生成。覆盖国内外大模型公司动态（头部公司 ≥ 3 条）、制造业+AI 行业、AI 新应用范式（Top 5 精选），每周以 overwrite 方式更新到唯一知识库。
 tags: [ai, news, weekly-report, feishu, manufacturing]
 triggers:
   - "跑一下 ai-news-collector"
@@ -57,7 +57,7 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 | 官方动态 | OpenAI / Anthropic / Google DeepMind / Meta AI 官方博客 | `web_fetch` + 日期过滤 |
 | 官方动态 | 字节火山引擎 / 阿里通义 / 腾讯混元 官方公告 | `web_search` 限定站点 |
 | 行业动态 | TechCrunch / The Verge / 36kr AI 频道 | `web_search` + 时间过滤 |
-| 飞书源 | waytoagi 知识库 | `web_fetch` 拉取 |
+| 飞书源 | waytoagi 知识库（Xjxv...Un4p 每日更新 wiki） | **`lark-cli docs +fetch` 走 user token**（不要用 web_fetch） |
 | 制造业 | 西门子 / GE / 施耐德 官方 newsroom | `web_fetch` |
 | 政策 | 网信办 / 工信部 / 发改委 官网公告 | `web_fetch` |
 
@@ -424,20 +424,63 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
                       ▼
               ┌───────┴────────┐
               ▼                ▼
-        ┌──────────┐    ┌──────────────┐
-        │ dry-run  │    │ 正式写入     │
-        │ 输出到   │    │ 飞书知识库   │
-        │ 本地文件 │    │ （见下）     │
-        └──────────┘    └──────────────┘
+        ┌──────────┐    ┌──────────────────────────┐
+        │ dry-run  │    │ 正式写入：overwrite 唯一知识库│
+        │ 输出到   │    │ （详见下方「飞书写入」章节） │
+        │ 本地文件 │    │                            │
+        └──────────┘    └──────────────────────────┘
 ```
 
-### 飞书写入（仅正式模式）
+### 飞书写入（默认 mode：overwrite 唯一目标 wiki）
 
-1. 调用 `lark-cli` 写入目标知识库
-2. **回传文档链接给用户**
-3. **保留本地 Markdown 备份**到 `~/Documents/ai-weekly-reports/YYYY-MM-DD.md`
+**v2.5.0 改版**：用户已确认**只保留一份目标文档**（防止重复），所以默认采用 **overwrite** 模式。
 
-> 具体 lark-cli 命令以本地 `lark-cli --help` 为准；若工具不可用 → 回退到手动复制。
+#### 目标 wiki（唯一）
+
+```
+node_token:  Czj0w4LIHiJNsykRhhWcYvvQnVh
+title:       AI前沿资讯 空间内的 "2026/06/18-Qwen3.7Max" wiki
+url:         https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh
+space_id:    7651908426297002965
+obj_token:   RlHHdgzOsoYVc5xuzSdcWa8Pn5f   ← 内容存在这里
+```
+
+> ⚠️ **不要在其他空间再建副本**。所有周报覆盖更新到**这一个** docx。
+> 也不要创建子文档（这是 wiki 节点，但实际是已存在的 docx 容器）。
+
+#### Overwrite 命令
+
+```bash
+lark-cli docs +update \
+  --command overwrite \
+  --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
+  --doc-format markdown \
+  --content @./2026-07-03-MiniMax-M3.md
+```
+
+**注意**：
+- `--doc` 用 obj_token（`RlHH...Pn5f`），**不是** node_token（`Czj0w...QnVh`）
+- `--command overwrite` 替换整篇
+- `--content @./file.md` 必须用相对路径（lark-cli 不接受绝对路径）
+- **必须在文件所在目录跑**（`cd /Users/st/Documents/ai-weekly-reports`）
+
+#### 每周 overwrite 后
+
+- 该 wiki 的标题字段**不会变**（仍是 "AI前沿资讯 空间内的 2026/06/18-Qwen3.7Max"）
+- 内容被替换为最新周报
+- **历史周报丢失**（这是用户主动接受的取舍："只保留一份防止重复"）
+- 如需要历史归档，建议本地保留 `~/Documents/ai-weekly-reports/*.md` 副本
+
+#### 标题显示优化（可选）
+
+虽然 wiki 标题是历史上的标题，但**文档内容内部**的 H1 是 `# AI 行业周报 · yyyy/mm/dd`，让读者打开就知道是这一期。
+
+#### 回退方案
+
+如果 overwrite 失败：
+1. **保留本地 Markdown**（已备份）
+2. 提示用户手动打开 https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh 复制粘贴
+3. **不**自动写到其他位置
 
 ---
 
@@ -506,10 +549,14 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 
 ### B. 链接清单
 
-| 用途 | 链接 |
+| 用途 | 链接 / Token |
 | --- | --- |
-| waytoagi 知识库 | https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e |
-| 飞书输出知识库 | https://my.feishu.cn/wiki/KRltwXjqQi7GtbkSneQcVAj6nj6 |
+| waytoagi（每日知识库更新 wiki） | https://waytoagi.feishu.cn/wiki/XjxvwwCZ7ijJMxkJ3SucrVEUn4p |
+| waytoagi（旧框架入口） | https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e |
+| **飞书输出（**唯一目标 wiki**）** | https://my.feishu.cn/wiki/Czj0w4LIHiJNsykRhhWcYvvQnVh |
+| 目标 wiki node_token | `Czj0w4LIHiJNsykRhhWcYvvQnVh` |
+| 目标 docx obj_token（overwrite 用） | `RlHHdgzOsoYVc5xuzSdcWa8Pn5f` |
+| 目标 space_id | `7651908426297002965` |
 | arXiv cs.AI | https://arxiv.org/list/cs.AI/recent |
 | arXiv cs.CL | https://arxiv.org/list/cs.CL/recent |
 | OpenAI 博客 | https://openai.com/blog |
@@ -522,6 +569,8 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 
 ### C. lark-cli 备查
 
+> v2.5.0 起，**默认使用 update overwrite**，不再创建新文档。
+
 ```bash
 # 查看版本
 lark-cli --version
@@ -529,12 +578,12 @@ lark-cli --version
 # 查看 docs 子命令
 lark-cli docs --help
 
-# 创建文档（实际语法，lark-cli ≥ 1.0）
-lark-cli docs +create \
-  --title "2026/07/03-MiniMax-M3" \
-  --content @content.md \
+# ★ 默认操作：overwrite 唯一目标 wiki 里的 docx
+lark-cli docs +update \
+  --command overwrite \
+  --doc "RlHHdgzOsoYVc5xuzSdcWa8Pn5f" \
   --doc-format markdown \
-  --parent-token <wiki_node_token>
+  --content @./2026-07-03-MiniMax-M3.md
 
 # 完整工作流指南（lark-cli 内置 skill）
 lark-cli skills read lark-doc
@@ -546,6 +595,8 @@ lark-cli skills read lark-doc
 ~/Documents/ai-weekly-reports/YYYY-MM-DD-模型版本.md
 ```
 
+> **重要**：因飞书上 overwrite 会丢失历史，建议永远在本地保留 Markdown 备份（至少最近 4 周可对比）。
+
 ### E. 版本历史
 
 > 详细变更记录见 [`../../CHANGELOG.md`](../../CHANGELOG.md)
@@ -553,6 +604,7 @@ lark-cli skills read lark-doc
 
 | 版本 | 日期 | 主要变更 |
 | --- | --- | --- |
+| 2.5.0 | 2026-07-03 | **唯一目标知识库**（`Czj0w4...QnVh`）；默认 overwrite 模式；删除"复制到新空间"流程；保留本地 Markdown 备份防历史丢失 |
 | 2.4.1 | 2026-07-03 | 头部公司（字节/阿里/智谱/MiniMax）≥ 3 条规则；G1.1 门禁 + 补抓流程；3 条内容维度模板 |
 | 2.4.0 | 2026-07-03 | 补 3 大规则：① 必抓官方源清单（每家公司）② 行业大会追踪维度（FORCE 等）③ Part 3 精选评分标准（Top 5，含创新/操作/时效/传播 4 维） |
 | 2.3.0 | 2026-07-03 | waytoagi 链接更新为 Xjxv...Un4p（每日更新 wiki）；新增 docs +update overwrite 用于更新旧周报 |

@@ -24,6 +24,37 @@
 
 ## [ai-news-collector] - 当前版本
 
+### [2.5.0] - 2026-07-03
+
+#### Changed
+- **默认飞书输出策略**：`docs +update --command overwrite`（替换唯一目标 wiki 内的 docx 内容）
+- **唯一目标 wiki**：
+  - node_token: `Czj0w4LIHiJNsykRhhWcYvvQnVh`
+  - obj_token: `RlHHdgzOsoYVc5xuzSdcWa8Pn5f`（overwrite 用）
+  - space_id: `7651908426297002965`
+- **去掉**「复制到新空间」的脚本/流程（之前在用户多空间测试时引入）
+- **附录 B** 重写：飞书输出地址 + 三个 token 都列出来
+- **附录 C** 更新 lark-cli 命令示例：默认 overwrite 而非 create
+- **附录 D 强调**：本地 Markdown 备份为唯一历史归档渠道
+
+#### Removed
+- 之前误加的"把 12 篇 wiki 复制到新空间"run.sh 脚本（在 `/Users/st/Documents/ai-weekly-reports/copy-tmp/`）—— 与本次"只保留一份"目标相悖
+
+#### Effect
+- 飞书文档数量：12+ → **1**（用户在 2026-07-03 主动删除了重复空间内的所有副本）
+- 下次跑写飞书：1 次 overwrite，不创建新文档
+- 历史周报：靠本地 `~/Documents/ai-weekly-reports/` 备份
+
+#### Migration
+- 用户应在飞书网页端确认「AI前沿资讯」空间里只剩一篇 `2026/06/18-Qwen3.7Max` wiki
+- 下次跑时跑 `lark-cli docs +update --command overwrite --doc RlHHdgzOsoYVc5xuzSdcWa8Pn5f ...`
+- 如果用户保留了删除前的旧空间，本脚本无需任何修改即可正常工作（overwrite 的对象是固定 obj_token）
+
+#### Triggered by
+- 用户反馈：飞书空间内有重复内容，决定只保留一份
+
+---
+
 ### [2.4.1] - 2026-07-03
 
 #### Added
