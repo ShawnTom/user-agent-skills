@@ -22,8 +22,14 @@ skills/
 
 | Skill | 版本 | 描述 |
 | --- | --- | --- |
-| [ai-news-collector](./ai-news-collector/SKILL.md) | 2.0.0 | AI 行业资讯周报（输出飞书） |
+| [ai-news-collector](./ai-news-collector/SKILL.md) | 2.6.0 | AI 行业资讯周报生成（飞书 overwrite 模式） |
 | [example-skill](./example-skill/SKILL.md) | 1.0.0 | 示例，可删除 |
+
+## 补充资料
+
+| 文档 | 描述 |
+| --- | --- |
+| [loop-improvements.md](./loop-improvements.md) | **ai-news-collector v1.0 → v2.6.0 迭代全过程**：版本时间线、对比 trae 的 8 个差距、Loop 改进模式、下一步方向 |
 
 ## 使用方式
 

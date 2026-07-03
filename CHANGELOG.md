@@ -298,3 +298,9 @@ git log --oneline                    # 提交历史
 git log -p SKILL.md                  # 单文件 diff 历史
 git diff v1.0.0..v2.0.0 -- SKILL.md  # 两版本间 diff
 ```
+
+---
+
+## 补充资料
+
+- [loop-improvements.md](./loop-improvements.md) — ai-news-collector v1.0 → v2.6.0 迭代全过程：版本时间线、对比 trae 的 8 个差距、Loop 改进模式、下一步方向（2026/07/03 建立）
