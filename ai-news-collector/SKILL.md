@@ -1,7 +1,7 @@
 ---
 name: ai-news-collector
-version: 2.1.0
-description: AI 行业资讯周报生成。覆盖国内外大模型公司动态、制造业+AI 行业、AI 新应用范式，输出为飞书文档。
+version: 2.4.0
+description: AI 行业资讯周报生成。覆盖国内外大模型公司动态、制造业+AI 行业、AI 新应用范式（Top 5 精选），输出为飞书文档。
 tags: [ai, news, weekly-report, feishu, manufacturing]
 triggers:
   - "跑一下 ai-news-collector"
@@ -74,6 +74,60 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 
 ---
 
+## 必抓官方源清单（每家公司至少 1 个官方入口）
+
+> **新增于 v2.4.0**：吸取"FORCE 大会漏抓"教训，整理每家公司的官方新闻入口，跑前必查。
+
+| 公司 | 官方 news / 博客 | 重要活动页 |
+| --- | --- | --- |
+| **字节 / 火山引擎** | https://www.volcengine.com/news / https://seed.bytedance.com/zh/ | https://www.volcengine.com/event |
+| **阿里 / 通义** | https://developer.aliyun.com/news / https://qwen.ai/news | https://yunqi.aliyun.com |
+| **腾讯 / 混元** | https://cloud.tencent.com/product/tclm | — |
+| **智谱** | https://docs.bigmodel.cn/cn/update/new-releases | — |
+| **月之暗面** | https://www.moonshot.cn/ | — |
+| **MiniMax** | https://www.minimaxi.com/news | — |
+| **百川** | https://www.baichuan-inc.com/ | — |
+| **零一万物** | https://www.lingyiwanwu.com/ | — |
+| **阶跃星辰** | https://platform.stepfun.com/ | — |
+| **Google DeepMind** | https://deepmind.google/discover/blog/ | https://io.google |
+| **Anthropic** | https://www.anthropic.com/news | — |
+| **OpenAI** | https://openai.com/news | — |
+| **Meta AI** | https://ai.meta.com/blog/ | — |
+| **西门子** | https://www.siemens.com/global/en/products/newsroom.html | — |
+| **GE Vernova** | https://www.ge.com/news/ | — |
+| **施耐德** | https://www.se.com/ww/en/about-us/newsroom/ | — |
+
+> 跑 skill 时，**每家至少 1 个 query 要限定到该官方域名**（如 `site:volcengine.com`），确保不漏。
+
+---
+
+## 行业大会追踪（每周必扫）
+
+> **新增于 v2.4.0**：FORCE 大会这种"事件级别"信息，单条 query 不一定能覆盖，需作为独立维度。
+
+### 重要行业大会清单
+
+| 大会 | 主办 | 常见时间 | 官方页 |
+| --- | --- | --- | --- |
+| **FORCE 原动力大会** | 火山引擎 | 6 月 / 12 月 | https://www.volcengine.com/event |
+| **百度世界大会** | 百度 | 11 月 | https://baiduworld.baidu.com |
+| **云栖大会** | 阿里云 | 11 月 | https://yunqi.aliyun.com |
+| **华为全联接大会 (HDC)** | 华为 | 9 月 | https://www.huawei.com/cn/events/hdc |
+| **腾讯云峰会** | 腾讯 | 不定期 | https://cloud.tencent.com/act |
+| **OpenAI DevDay** | OpenAI | 10-11 月 | — |
+| **Google I/O** | Google | 5 月 | https://io.google |
+| **Anthropic Build** | Anthropic | 不定期 | — |
+| **Microsoft Build / Ignite** | Microsoft | 5 月 / 11 月 | — |
+
+### 处理规则
+
+1. **每周跑时先扫**：本周有哪个大会召开（用 Exa 搜"行业大会 6 月"或直接查官方页）
+2. **作为 Part 1 的"重要行业大会"段**单独列出（不与公司动态混在一起）
+3. **覆盖内容**：核心发布清单 + 关键人物表态 + 市场地位数据 + 至少 1 个一手来源链接
+4. **整理公司动态时**：对应公司的发布若属于该大会，要在公司条目里**指向**大会段（如"详见行业大会段"）
+
+---
+
 ## 竞品清单
 
 ### Part 1：AI 前沿动态
@@ -108,9 +162,37 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 
 ### Part 3：AI 新应用范式
 
-来源：https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e
-- 至少 **1 个**新范式或创新理念
+来源（**优先用 lark-cli 抓取**）：https://waytoagi.feishu.cn/wiki/XjxvwwCZ7ijJMxkJ3SucrVEUn4p
+- 每周精选 **Top 5**（不是全量罗列）
 - 标注日期 + 在原文中的位置（小节标题 / 锚点）
+
+#### Part 3 精选评分规则（v2.4.0 新增）
+
+> 解决"列出来太多、质量参差"问题。每次跑必须**按以下标准评分后**取 Top 5。
+
+**评分维度（总分 10）**：
+
+| 维度 | 权重 | 评分依据 |
+| --- | --- | --- |
+| **创新性** | 40% | 提出新概念 / 改变共识 / 跨范式融合；反之若是已知概念重新包装 → 低分 |
+| **可操作性** | 30% | 有具体方法论 / 决策树 / 代码示例；纯理论 → 低分 |
+| **时效性** | 20% | 本周首发 / 反映最新趋势；老话题翻炒 → 低分 |
+| **传播性** | 10% | 行业有讨论 / 多人引用；无人问津 → 低分 |
+
+**入选标准**：
+
+- 总分 ≥ 7.0 才考虑入选
+- 入选 Top 5 时**优先保证多样性**（不要 5 条全是"Agent 架构"主题）
+- 优先选**有原文 + 可点击链接**的条目
+
+**剔除规则（直接 0 分）**：
+
+- ❌ 纯趋势研究 / 宏观预测（除非是当周新发布的）
+- ❌ 单一产品发布（无新概念）
+- ❌ 工具使用细节（除非该工具本周发生重大变化）
+- ❌ 已知概念的二次解读
+
+**输出格式**：每条标注 `⭐ Top N` 排名 + 总分（可选）+ 简短的"为什么值得关注"段（不超 3 句）。
 
 ---
 
@@ -257,9 +339,10 @@ schedule: "每周五 08:40（依赖 catui-agent 客户端在线）"
 
 - [ ] **G1**：Part 1 国内 9 家 + 国外 3 家**全部有条目**（无动态用模板 C）
 - [ ] **G2**：Part 2 至少检查了**西门子、GE、施耐德 3 家**
-- [ ] **G3**：Part 3 至少**1 个新范式**，含日期 + 原文位置
+- [ ] **G3**：Part 3 **Top 5 精选**（按创新+操作+时效+传播评分），含日期 + 原文位置
 - [ ] **G4**：每条非空条目**都有日期 + 可点击的完整 URL**
 - [ ] **G5**：所有推测/单一来源内容**已加「待核实」标签**
+- [ ] **G6**（v2.4.0 新增）：**已扫过本周行业大会清单**，如有相关事件已独立列出
 
 通过 → 进入"飞书写入"环节。
 未通过 → 列出缺失项，回到对应步骤补齐。
@@ -439,6 +522,9 @@ lark-cli skills read lark-doc
 
 | 版本 | 日期 | 主要变更 |
 | --- | --- | --- |
+| 2.4.0 | 2026-07-03 | 补 3 大规则：① 必抓官方源清单（每家公司）② 行业大会追踪维度（FORCE 等）③ Part 3 精选评分标准（Top 5，含创新/操作/时效/传播 4 维） |
+| 2.3.0 | 2026-07-03 | waytoagi 链接更新为 Xjxv...Un4p（每日更新 wiki）；新增 docs +update overwrite 用于更新旧周报 |
+| 2.2.0 | 2026-07-03 | 补"飞书权限"附录（docx scope / 路径处理 / +member-add / +apply-permission） |
 | 2.1.0 | 2026-07-03 | 补"前置依赖安装"附录（agent-reach / Exa / lark-cli） |
 | 2.0.0 | 2026-07-03 | 重构：补 frontmatter / 数据源分层 / 输出模板 / 质量门禁 / 失败恢复 / 样例 / 附录 |
 | 1.0.0 | 2026-07-03 | 初版 |

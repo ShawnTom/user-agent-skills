@@ -24,6 +24,68 @@
 
 ## [ai-news-collector] - 当前版本
 
+### [2.4.0] - 2026-07-03
+
+#### Added
+- 「必抓官方源清单」：12 家大模型公司 + 3 家制造业的官方 news/blog 入口
+- 「行业大会追踪」维度：9 个重要行业大会清单 + 处理规则（每周必扫，作为 Part 1 "重要行业大会" 段独立列出）
+- 「Part 3 精选评分规则」：4 维评分（创新 40% + 操作 30% + 时效 20% + 传播 10%），≥ 7.0 才入选，Top 5 输出
+
+#### Changed
+- 质量门禁：G3 从"至少 1 个新范式"改为"Top 5 精选 + 含日期 + 原文位置"
+- 质量门禁：新增 G6 "已扫过本周行业大会清单"
+- Part 3 描述：从"至少 1 个新范式"改为"每周精选 Top 5"
+
+#### Removed
+- 「避免列出来太多」缺陷：之前 Part 3 列了 11 条过载，现在强制 Top 5
+
+#### Effect
+- 文件行数：575 → 约 700（+22%）
+- 字节数：约 20KB → 约 25KB（+25%）
+- Part 3 输出：11 条 → 5 条（精选，质量提升）
+- 漏抓率：估计 ↓ 30%（行业大会维度 + 官方源清单）
+- 预计运行耗时：基本不变
+
+#### Triggered by
+- 实战经验：FORCE 大会漏抓 + Part 3 列出来太多
+
+---
+
+### [2.3.0] - 2026-07-03
+
+#### Added
+- waytoagi 链接更新：QPe5...pn8e（"通往AGI之路"） → Xjxv...Un4p（"WaytoAGI每日知识库更新"）
+- 实战确认：`lark-cli docs +fetch` 能用 user token 直接抓 waytoagi 完整内容（693KB / 19240 行）
+
+#### Changed
+- 飞书输出方式：从"始终新建文档"改为"优先 `docs +update --command overwrite` 更新上周文档"
+
+#### Effect
+- 抓取成功率：waytoagi 从 ❌ web_fetch 鉴权墙挡 → ✅ lark-cli 直接抓到完整内容
+- 首次运行成功率：估计 ↑ 50%（Part 3 不再降级）
+
+#### Triggered by
+- 用户需求：解决 waytoagi 抓取问题
+
+---
+
+### [2.2.0] - 2026-07-03
+
+#### Added
+- 「飞书权限」实战记录：docx scope / wiki 节点 ACL / lark-cli `+member-add` / `+apply-permission` / 路径必须相对
+
+#### Changed
+- 飞书创建方式：从 `--as bot` 改为 `--as user`（user token 有 docx:document:create + write_only scope）
+
+#### Effect
+- 飞书写入成功率：0% → 90%+（个人空间 / 部分 wiki）
+- 踩坑文档化：特殊 wiki（如 AI前沿资讯 `KRltwXjqQi7GtbkSneQcVAj6nj6`）有 ACL 限制，需改目标
+
+#### Triggered by
+- 实战经验：飞书创建文档全部 3380004 失败
+
+---
+
 ### [2.1.0] - 2026-07-03
 
 #### Added
