@@ -1,0 +1,85 @@
+version: "3.1.2"
+timezone: "Asia/Shanghai"
+
+part1:
+  domestic:
+    - name: "字节跳动"
+      products: ["豆包", "即梦", "Seed", "火山引擎"]
+      official_urls: ["https://www.volcengine.com/news", "https://seed.bytedance.com/zh/", "https://www.volcengine.com/event"]
+    - name: "阿里巴巴"
+      products: ["通义千问", "Qwen", "通义万相", "Wan"]
+      official_urls: ["https://developer.aliyun.com/news", "https://qwen.ai/news", "https://yunqi.aliyun.com"]
+    - name: "腾讯"
+      products: ["混元", "元宝", "腾讯云 AI"]
+      official_urls: ["https://cloud.tencent.com/product/tclm", "https://cloud.tencent.com/act"]
+    - name: "智谱 AI"
+      products: ["GLM", "智谱开放平台"]
+      official_urls: ["https://docs.bigmodel.cn/cn/update/new-releases"]
+    - name: "月之暗面"
+      products: ["Kimi"]
+      official_urls: ["https://www.moonshot.cn/"]
+    - name: "MiniMax"
+      products: ["MiniMax", "海螺", "星野"]
+      official_urls: ["https://www.minimaxi.com/news"]
+    - name: "百川智能"
+      products: ["百川大模型", "百小医"]
+      official_urls: ["https://www.baichuan-inc.com/"]
+    - name: "零一万物"
+      products: ["Yi", "万智"]
+      official_urls: ["https://www.lingyiwanwu.com/"]
+    - name: "阶跃星辰"
+      products: ["Step"]
+      official_urls: ["https://platform.stepfun.com/"]
+  international:
+    - name: "OpenAI"
+      products: ["GPT", "ChatGPT", "Codex", "Sora"]
+      official_urls: ["https://openai.com/news/"]
+    - name: "Anthropic"
+      products: ["Claude", "Claude Code"]
+      official_urls: ["https://www.anthropic.com/news"]
+    - name: "Google DeepMind"
+      products: ["Gemini", "Veo", "Imagen"]
+      official_urls: ["https://deepmind.google/discover/blog/", "https://blog.google/technology/ai/"]
+
+part2:
+  manufacturers:
+    - name: "Siemens"
+      official_urls: ["https://www.siemens.com/global/en/products/newsroom.html"]
+    - name: "GE Vernova"
+      official_urls: ["https://www.gevernova.com/news/"]
+    - name: "Schneider Electric"
+      official_urls: ["https://www.se.com/ww/en/about-us/newsroom/"]
+  policy_sources:
+    - name: "国家互联网信息办公室"
+      official_urls: ["https://www.cac.gov.cn/"]
+    - name: "工业和信息化部"
+      official_urls: ["https://www.miit.gov.cn/"]
+    - name: "国家发展和改革委员会"
+      official_urls: ["https://www.ndrc.gov.cn/"]
+
+part3:
+  waytoagi:
+    url: "https://waytoagi.feishu.cn/wiki/XjxvwwCZ7ijJMxkJ3SucrVEUn4p"
+    required_identity: "user"
+    output_limit: 5
+
+conferences:
+  - name: "FORCE 原动力大会"
+    official_url: "https://www.volcengine.com/event"
+  - name: "百度世界大会"
+    official_url: "https://baiduworld.baidu.com"
+  - name: "云栖大会"
+    official_url: "https://yunqi.aliyun.com"
+  - name: "华为开发者大会/全联接大会"
+    official_url: "https://www.huawei.com/cn/events"
+  - name: "Google I/O"
+    official_url: "https://io.google"
+  - name: "Microsoft Build/Ignite"
+    official_url: "https://events.microsoft.com/"
+
+search_dimensions:
+  - "product_or_technology"
+  - "commercial_or_capital"
+  - "customer_or_partnership"
+  - "policy_or_regulation"
+  - "conference_or_executive_statement"

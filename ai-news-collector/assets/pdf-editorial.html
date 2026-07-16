@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="$lang$" xmlns="http://www.w3.org/1999/xhtml" xml:lang="$lang$"$if(dir)$ dir="$dir$"$endif$>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>$pagetitle$</title>
+  <style>
+    :root {
+      --paper: #faf9f5;
+      --ink: #292621;
+      --muted: #6f6a62;
+      --line: #d9d4cb;
+      --accent: #bd542d;
+      --soft: #f1eee7;
+      --warn: #fff4d6;
+      --warn-line: #a77b20;
+      --note: #edf1ea;
+      --note-line: #71806b;
+    }
+
+    @page {
+      size: A4;
+      margin: 18mm 20mm 20mm;
+      background: var(--paper);
+
+      @bottom-center {
+        content: counter(page);
+        color: #777269;
+        font-family: "PingFang SC", "Noto Sans CJK SC", sans-serif;
+        font-size: 9px;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--paper);
+      color: var(--ink);
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+
+    body {
+      font-family: "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
+      font-size: 13px;
+      line-height: 1.72;
+      letter-spacing: 0;
+      orphans: 3;
+      widows: 3;
+    }
+
+    body::before {
+      position: fixed;
+      inset: -30mm;
+      z-index: -1;
+      background: var(--paper);
+      content: "";
+    }
+
+    main,
+    .report {
+      width: 100%;
+      margin: 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      color: var(--ink);
+      font-family: "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      font-weight: 650;
+      letter-spacing: 0;
+      break-after: avoid-page;
+      page-break-after: avoid;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      padding: 0 0 10px;
+      border-bottom: 2px solid var(--ink);
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    h2 {
+      margin: 28px 0 10px;
+      padding: 0 0 7px;
+      border-bottom: 1px solid var(--line);
+      font-size: 19px;
+      line-height: 1.35;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      padding-left: 10px;
+      border-left: 3px solid var(--accent);
+      font-size: 15.5px;
+      line-height: 1.4;
+    }
+
+    h4 {
+      margin: 16px 0 5px;
+      font-size: 13.5px;
+      line-height: 1.45;
+    }
+
+    p {
+      margin: 5px 0 8px;
+      text-align: justify;
+    }
+
+    ul,
+    ol {
+      margin: 6px 0 9px 22px;
+      padding: 0;
+    }
+
+    li {
+      margin: 2px 0;
+    }
+
+    strong {
+      font-weight: 700;
+    }
+
+    a {
+      color: inherit;
+      text-decoration-color: var(--accent);
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: var(--soft);
+      color: var(--ink);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+      overflow-wrap: anywhere;
+    }
+
+    hr {
+      margin: 22px 0;
+      border: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    blockquote {
+      margin: 9px 0;
+      padding: 7px 11px;
+      border-left: 3px solid var(--line);
+      color: var(--muted);
+      break-inside: avoid-page;
+    }
+
+    blockquote p:last-child {
+      margin-bottom: 0;
+    }
+
+    .meta,
+    .source,
+    .warning,
+    .policy-note,
+    .method-note {
+      margin: 9px 0 12px;
+      padding: 8px 11px;
+      border-left: 3px solid var(--line);
+      break-inside: avoid-page;
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+
+    .meta,
+    .source {
+      color: var(--muted);
+    }
+
+    .source {
+      padding-top: 5px;
+      padding-bottom: 5px;
+      background: transparent;
+    }
+
+    .warning {
+      border-left-color: var(--warn-line);
+      background: var(--warn);
+      color: #5f4a18;
+    }
+
+    .policy-note,
+    .method-note {
+      border-left-color: var(--note-line);
+      background: var(--note);
+      color: #384236;
+    }
+
+    .meta p,
+    .source p,
+    .warning p,
+    .policy-note p,
+    .method-note p {
+      margin: 0;
+    }
+
+    .page-break {
+      break-before: page;
+      page-break-before: always;
+    }
+
+    table {
+      width: 100%;
+      margin: 10px 0 14px;
+      border-collapse: collapse;
+      break-inside: auto;
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tr {
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+    }
+
+    th,
+    td {
+      padding: 6px 7px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    th {
+      background: var(--soft);
+      font-family: "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      font-weight: 650;
+    }
+
+    tbody tr:nth-child(even) td {
+      background: #f7f5ef;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      break-inside: avoid-page;
+    }
+
+    figure {
+      margin: 12px 0;
+      break-inside: avoid-page;
+    }
+
+    figcaption {
+      color: var(--muted);
+      font-size: 10.5px;
+      text-align: center;
+    }
+
+    #TOC {
+      margin: 12px 0 24px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    #TOC ul {
+      list-style: none;
+      margin-left: 0;
+    }
+
+    @media print {
+      html,
+      body {
+        background: var(--paper) !important;
+      }
+
+      a {
+        text-decoration-thickness: 0.6px;
+      }
+    }
+  </style>
+$for(header-includes)$
+  $header-includes$
+$endfor$
+</head>
+<body>
+$for(include-before)$
+$include-before$
+$endfor$
+$if(toc)$
+<nav id="$idprefix$TOC" role="doc-toc">
+$if(toc-title)$
+<h2 id="$idprefix$toc-title">$toc-title$</h2>
+$endif$
+$table-of-contents$
+</nav>
+$endif$
+<main class="report">
+$body$
+</main>
+$for(include-after)$
+$include-after$
+$endfor$
+</body>
+</html>

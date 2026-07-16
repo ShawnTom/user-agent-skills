@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI 资讯周报"
+  short_description: "生成可溯源、时效明确且简洁美观的 AI 行业周报 PDF"
+  default_prompt: "Use $ai-news-collector to generate this week’s evidence-backed AI industry report as a concise PDF."

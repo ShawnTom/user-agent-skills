@@ -13,6 +13,8 @@ skills/
 ├── .gitignore               # 排除系统/编辑器临时文件
 └── <skill-name>/            # 每个 skill 一个目录
     ├── SKILL.md             # 必须：YAML 头部 + 说明文档
+    ├── agents/              # 可选：Codex UI 元数据
+    ├── assets/              # 可选：输出模板、字体、图标等资产
     ├── scripts/             # 可选：辅助脚本
     ├── references/          # 可选：参考资料
     └── runs/                # 可选：运行日志
@@ -22,7 +24,7 @@ skills/
 
 | Skill | 版本 | 描述 |
 | --- | --- | --- |
-| [ai-news-collector](./ai-news-collector/SKILL.md) | 2.7.0 | AI 行业资讯周报生成（飞书独立 create 模式） |
+| [ai-news-collector](./ai-news-collector/SKILL.md) | 3.1.2 | 可溯源、带联网硬门禁的 AI 行业周报 PDF |
 | [ai-news-monthly](./ai-news-monthly/SKILL.md) | 1.0.0 | AI 行业资讯月报生成（30 天窗口，4 维度趋势分析 + 跨周时间线 + 大会复盘） |
 | [example-skill](./example-skill/SKILL.md) | 1.0.0 | 示例，可删除 |
 
@@ -31,13 +33,14 @@ skills/
 | 文档 | 描述 |
 | --- | --- |
 | [loop-improvements.md](./loop-improvements.md) | **ai-news-collector v1.0 → v2.6.0 迭代全过程**：版本时间线、对比 trae 的 8 个差距、Loop 改进模式、下一步方向 |
+| [ai-news-collector/CHANGELOG.md](./ai-news-collector/CHANGELOG.md) | 周报 skill 完整版本变更、事故复盘与验证记录 |
 | [ai-news-monthly/CHANGELOG.md](./ai-news-monthly/CHANGELOG.md) | 月报 skill 版本变更记录 |
 
 ## 使用方式
 
 1. **触发**：在 catui-agent 对话中说对应 trigger 关键词
 2. **新建 skill**：在 `skills/` 下建子目录，参照 `example-skill/` 模板
-3. **修改 skill**：编辑后更新 `SKILL.md` 的 `version` 字段 + 在 `CHANGELOG.md` 追加记录 + git 提交
+3. **修改 skill**：编辑后更新 skill 正文中的规范版本，并在对应 `CHANGELOG.md` 追加记录后提交
 
 ## 版本管理
 

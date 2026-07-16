@@ -68,6 +68,48 @@
 
 ## [ai-news-collector] - 当前版本
 
+### [3.1.2] - 2026-07-16
+
+#### Changed - 增加联网硬门禁
+
+- 正式运行前必须验证 `agent-reach`、候选搜索和官方正文读取三项链路。
+- 断网、DNS/代理异常或检索链路不完整时立即停止，不生成降级周报或 PDF。
+- 禁止用 WaytoAGI、浏览器单页或模型已有知识替代完整互联网采集。
+
+### [3.1.1] - 2026-07-16
+
+#### Fixed - WaytoAGI 无年份日期口径
+
+- WaytoAGI 月日标题直接映射到当前报告窗口内匹配日期，不再因缺少年份丢弃条目。
+- 增加 `time_precision=day` 和 `date_basis=waytoagi_latest_heading` 审计字段。
+- 时效校验器按报告自然日窗口处理 WaytoAGI；外部事实仍使用真实发布时间。
+
+### [3.1.0] - 2026-07-16
+
+#### Changed - 可信度、时效、飞书授权与 PDF 全链路重构
+
+- 输出从飞书文档改为独立 Editorial 风格 PDF，并拒绝覆盖已有文件。
+- `SKILL.md` 从 944 行旧版精简为 198 行，详细规则按需拆到 `references/`。
+- 取消固定新闻条数、数字数量和强制预测，改用覆盖状态审计保证完整性。
+- 建立 `source_id`、`claim_id`、`event_id` 证据链，逐条核对原文引用。
+- 自动拒绝搜索摘要、聚合页和公司入口页作为具体事实证据。
+- 使用 `(previous_cutoff, cutoff]`、`Asia/Shanghai` 和明确时间字段验证时效。
+- 新增飞书预检：验证 user token、scope、Wiki ACL、Docx 正文、revision、SHA-256 和子文档下钻。
+- 修正“bot 必然被 ACL 拒绝”的旧假设；公开 Wiki 仍默认使用 user，且不静默回退。
+- 新增事实校验、时效校验、事件去重和 PDF 渲染脚本。
+- 重写 PDF 模板，修复无效 `:has()` 文本选择器、分页、页码和长表布局。
+
+#### Verified
+
+- skill-creator 校验通过。
+- 正确证据与时间窗口通过；伪造引用、单源市场数字和入口页证据被拒绝。
+- WaytoAGI user 授权、主文档及子文档真实读取通过。
+- 三页 A4 PDF 回归通过，页面边缘均为 `#FAF9F5`，重复输出被拒绝覆盖。
+
+详细记录见 [`ai-news-collector/CHANGELOG.md`](./ai-news-collector/CHANGELOG.md)。
+
+---
+
 ### [2.7.0] - 2026-07-03
 
 #### Changed - 推翻 overwrite 模式
